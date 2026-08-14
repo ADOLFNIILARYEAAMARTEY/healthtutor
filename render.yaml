@@ -9,7 +9,7 @@ services:
     runtime: node
     plan: free
     buildCommand: pnpm install --frozen-lockfile && pnpm prisma generate && pnpm build
-    startCommand: pnpm prisma migrate deploy && pnpm start
+    startCommand: pnpm start
     envVars:
       - key: DATABASE_URL
         fromDatabase:
