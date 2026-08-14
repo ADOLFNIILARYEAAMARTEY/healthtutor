@@ -1,0 +1,150 @@
+// HealthTutor — Student Attendance and Academic Monitoring System
+// Prisma schema. See README.md for setup instructions.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  TUTOR
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  // Used by admin "Disable Tutor" — disabled tutors cannot log in.
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  courses Course[] @relation("TutorCourses")
+
+  @@map("users")
+}
+
+model Student {
+  id            String   @id @default(cuid())
+  studentNumber String   @unique
+  firstName     String
+  lastName      String
+  email         String   @unique
+  phone         String?
+  gender        Gender?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  enrollments Enrollment[]
+  attendance  Attendance[]
+  scores      Score[]
+
+  @@map("students")
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  courseCode  String   @unique
+  courseName  String
+  description String?
+  tutorId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tutor        User          @relation("TutorCourses", fields: [tutorId], references: [id], onDelete: Restrict)
+  enrollments  Enrollment[]
+  sessions     ClassSession[]
+  assessments  Assessment[]
+
+  @@map("courses")
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  studentId String
+  courseId  String
+  createdAt DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  course  Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, courseId])
+  @@map("enrollments")
+}
+
+model ClassSession {
+  id          String   @id @default(cuid())
+  courseId    String
+  sessionDate DateTime
+  topic       String?
+  createdAt   DateTime @default(now())
+
+  course     Course       @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  attendance Attendance[]
+
+  @@map("class_sessions")
+}
+
+model Attendance {
+  id        String            @id @default(cuid())
+  sessionId String
+  studentId String
+  status    AttendanceStatus
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  session ClassSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student Student      @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([sessionId, studentId])
+  @@map("attendance")
+}
+
+model Assessment {
+  id             String   @id @default(cuid())
+  courseId       String
+  title          String
+  assessmentType String
+  maximumScore   Float
+  weight         Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  course Course  @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  scores Score[]
+
+  @@map("assessments")
+}
+
+model Score {
+  id           String   @id @default(cuid())
+  assessmentId String
+  studentId    String
+  score        Float
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  student    Student    @relation(fields: [studentId], references: [id], onDelete: Restrict)
+
+  @@unique([assessmentId, studentId])
+  @@map("scores")
+}
