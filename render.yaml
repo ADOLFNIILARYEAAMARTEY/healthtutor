@@ -19,5 +19,7 @@ services:
         generateValue: true
       - key: AUTH_TRUST_HOST
         value: "true"
+      - key: NEXTAUTH_URL
+        value: "https://healthtutor-1.onrender.com"
       - key: NODE_VERSION
         value: 22.14.0
