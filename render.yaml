@@ -8,7 +8,7 @@ services:
     name: healthtutor
     runtime: node
     plan: free
-    buildCommand: pnpm install --frozen-lockfile && pnpm prisma generate && pnpm build
+    buildCommand: pnpm install --frozen-lockfile && pnpm prisma migrate deploy && pnpm db:seed && pnpm prisma generate && pnpm build
     startCommand: pnpm start
     envVars:
       - key: DATABASE_URL
